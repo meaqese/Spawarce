@@ -27,14 +27,14 @@ class Dashboard(pygame.sprite.Sprite):
         self.image = pygame.Surface((0, 0))
         self.rect = self.image.get_rect()
 
-    def update_count(self):
+    def update_count(self, count=1):
         text = pygame.font.Font(None, 30)\
-            .render(f'Очков: {self.count + 1}', True, (255, 255, 255))
+            .render(f'Очков: {self.count + count}', True, (255, 255, 255))
         self.image = pygame.Surface(text.get_size())
         self.rect = self.image.get_rect()
         self.image.blit(text, text.get_rect())
 
-        self.count += 1
+        self.count += count
 
     def reset(self):
         self.count = -1
@@ -54,6 +54,7 @@ class Spaceship(pygame.sprite.Sprite):
 
         self.image = load_image('spaceship.gif')
         self.screen = screen
+        self.stronger = False
 
         center = center - self.image.get_width() // 2
         self.rect = self.image.get_rect().move(center, 500)
@@ -69,7 +70,14 @@ class Spaceship(pygame.sprite.Sprite):
             elif signal == 44:
                 if clock.tick() > 100:
                     fireball_center = self.image.get_width() // 2 - 6
+
                     Fireball(self.rect.x + fireball_center, self.rect.y)
+                    if self.stronger:
+                        Fireball(self.rect.x + fireball_center, self.rect.y)
+        if dashboard.kills >= 20:
+            self.stronger = True
+
+            self.image = pygame.transform.scale(load_image('spaceship-2.png'), (113, 102))
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -107,7 +115,9 @@ class Enemy(pygame.sprite.Sprite):
 
             if self.health == 0:
                 self.remove(all_sprites, enemy_group)
-                dashboard.update_count()
+
+                score = 1 if not self.stronger else 2
+                dashboard.update_count(score)
         elif pygame.sprite.spritecollideany(self, home_group):
             start_screen(self.screen, f'Score: {dashboard.kills}')
             self.kill()
